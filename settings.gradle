@@ -14,3 +14,4 @@ plugins {
 
 rootProject.name = 'cinema-challange'
 include('app')
+include('movies-catalog')
