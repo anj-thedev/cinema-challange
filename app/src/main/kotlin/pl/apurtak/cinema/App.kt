@@ -3,13 +3,31 @@
  */
 package pl.apurtak.cinema
 
+import pl.apurtak.cinema.moviescatalog.MoviesCatalogConfiguration
+import pl.apurtak.cinema.moviescatalog.model.Movie
+import java.util.*
+
 class App {
-    val greeting: String
-        get() {
-            return "Hello World!"
-        }
+    val moviesCatalog = MoviesCatalogConfiguration.inMemoryCatalog()
 }
 
 fun main() {
-    println(App().greeting)
+    val app  = App()
+    val shrek = Movie(
+        id = UUID.randomUUID(),
+        name = "Shrek",
+        durationMinutes = 90,
+        threeDimensionalGlassesNeeded = false
+    )
+    val theGodfather = Movie(
+        id = UUID.randomUUID(),
+        name = "The Godfather",
+        durationMinutes = 120,
+        threeDimensionalGlassesNeeded = false
+    )
+    app.moviesCatalog.add(shrek)
+    app.moviesCatalog.add(theGodfather)
+
+    println("Available movies: ${app.moviesCatalog.listMovies()}")
+
 }
