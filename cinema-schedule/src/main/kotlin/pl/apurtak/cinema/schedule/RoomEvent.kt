@@ -27,4 +27,10 @@ sealed interface RoomEvent {
             return other.cleaningSlotStartTime in cleaningSlotRange || other.cleaningSlotEndTime in cleaningSlotRange
         }
     }
+
+    data class Unavailability(
+        override val date: LocalDate,
+        override val startTime: LocalTime,
+        override val endTime: LocalTime
+    ) : RoomEvent
 }

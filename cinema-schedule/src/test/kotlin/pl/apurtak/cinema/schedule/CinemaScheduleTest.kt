@@ -7,10 +7,13 @@ import assertk.assertions.containsOnly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
 import org.junit.jupiter.api.Test
+import pl.apurtak.cinema.schedule.CinemaScheduleCommand.*
+import pl.apurtak.cinema.schedule.CinemaScheduleEvent.*
 import pl.apurtak.cinema.schedule.CinemaScheduleFixtures.defaultDate
 import pl.apurtak.cinema.schedule.CinemaScheduleFixtures.sampleMovieId1
 import pl.apurtak.cinema.schedule.CinemaScheduleFixtures.sampleMovieId2
 import pl.apurtak.cinema.schedule.CinemaScheduleFixtures.sampleShow
+import java.time.LocalDate
 import java.time.LocalTime
 
 class CinemaScheduleTest {
@@ -22,7 +25,7 @@ class CinemaScheduleTest {
 
         // when
         val result = cinemaSchedule.process(
-            CinemaScheduleCommand.ScheduleRoomEvent(
+            ScheduleRoomEventCommand(
                 roomId = "1", event = sampleShow()
             )
         )
@@ -31,8 +34,10 @@ class CinemaScheduleTest {
         assertThat(result).isInstanceOf(ScheduleResult.Success::class).isEqualTo(
             ScheduleResult.Success(
                 listOf(
-                    CinemaScheduleEvent.RoomEventAdded(
-                        roomId = "1", roomEvent = sampleShow()
+                    RoomEventAdded(
+                        version = 1,
+                        roomId = "1",
+                        event = sampleShow()
                     )
                 )
             )
@@ -45,16 +50,18 @@ class CinemaScheduleTest {
         // given
         val cinemaSchedule = givenCinemaScheduleEvents(
             listOf(
-                CinemaScheduleEvent.RoomEventAdded(
-                    "1", sampleShow(
+                RoomEventAdded(
+                    version = 1,
+                    roomId = "1",
+                    event = sampleShow(
                         movieId = sampleMovieId1, date = defaultDate, startTime = LocalTime.of(21, 30)
                     )
-                ), CinemaScheduleEvent.RoomEventAdded(
-                    "1", sampleShow(
+                ), RoomEventAdded(
+                    version = 2, roomId = "1", event = sampleShow(
                         movieId = sampleMovieId2, date = defaultDate, startTime = LocalTime.of(18, 0)
                     )
-                ), CinemaScheduleEvent.RoomEventAdded(
-                    "1", sampleShow(
+                ), RoomEventAdded(
+                    version = 3, roomId = "1", event = sampleShow(
                         movieId = sampleMovieId2, date = defaultDate.plusDays(1), startTime = LocalTime.of(18, 0)
                     )
                 )
@@ -81,8 +88,9 @@ class CinemaScheduleTest {
         val eightPm = LocalTime.of(20, 0)
         val cinemaSchedule = givenCinemaScheduleEvents(
             listOf(
-                CinemaScheduleEvent.RoomEventAdded("1", sampleShow(sampleMovieId1, defaultDate, halfPastFivePm, 90)),
-                CinemaScheduleEvent.RoomEventAdded(
+                RoomEventAdded(1, "1", sampleShow(sampleMovieId1, defaultDate, halfPastFivePm, 90)),
+                RoomEventAdded(
+                    2,
                     "1",
                     sampleShow(sampleMovieId2, defaultDate.minusDays(1), eightPm, 110)
                 )
@@ -104,8 +112,8 @@ class CinemaScheduleTest {
         // given
         val cinemaSchedule = givenCinemaScheduleEvents(
             listOf(
-                CinemaScheduleEvent.RoomEventAdded(
-                    "1", sampleShow(
+                RoomEventAdded(
+                    1, "1", sampleShow(
                         movieId = sampleMovieId1, startTime = LocalTime.of(17, 30), durationMinutes = 90
                     )
                 )
@@ -114,7 +122,7 @@ class CinemaScheduleTest {
 
         // when
         val scheduleResult = cinemaSchedule.process(
-            CinemaScheduleCommand.ScheduleRoomEvent(
+            ScheduleRoomEventCommand(
                 "1", sampleShow(movieId = sampleMovieId2, startTime = LocalTime.of(18, 59))
             )
         )
@@ -134,8 +142,8 @@ class CinemaScheduleTest {
         // given
         val cinemaSchedule = givenCinemaScheduleEvents(
             listOf(
-                CinemaScheduleEvent.RoomEventAdded(
-                    "1", sampleShow(
+                RoomEventAdded(
+                    1, "1", sampleShow(
                         movieId = sampleMovieId1, startTime = LocalTime.of(17, 30), durationMinutes = 90
                     )
                 )
@@ -144,7 +152,7 @@ class CinemaScheduleTest {
 
         // when
         val scheduleResult = cinemaSchedule.process(
-            CinemaScheduleCommand.ScheduleRoomEvent(
+            ScheduleRoomEventCommand(
                 "2", sampleShow(movieId = sampleMovieId2, startTime = LocalTime.of(17, 0))
             )
         )
@@ -152,8 +160,8 @@ class CinemaScheduleTest {
         // then
         assertThat(scheduleResult).isInstanceOf(ScheduleResult.Success::class).transform { it.events }
             .containsExactly(
-                CinemaScheduleEvent.RoomEventAdded(
-                    "2",
+                RoomEventAdded(
+                    2, "2",
                     sampleShow(movieId = sampleMovieId2, startTime = LocalTime.of(17, 0))
                 )
             )
@@ -164,19 +172,19 @@ class CinemaScheduleTest {
         // given
         val cinemaSchedule = givenCinemaScheduleEvents(
             listOf(
-                CinemaScheduleEvent.RoomEventAdded("1", sampleShow(sampleMovieId1, defaultDate, LocalTime.of(17, 0))),
-                CinemaScheduleEvent.RoomEventAdded("1", sampleShow(sampleMovieId2, defaultDate, LocalTime.of(20, 0)))
+                RoomEventAdded(1, "1", sampleShow(sampleMovieId1, defaultDate, LocalTime.of(17, 0))),
+                RoomEventAdded(2, "1", sampleShow(sampleMovieId2, defaultDate, LocalTime.of(20, 0)))
             )
         )
 
         // when
         val scheduleResult =
-            cinemaSchedule.process(CinemaScheduleCommand.CancelRoomEvent("1", defaultDate, LocalTime.of(17, 0)))
+            cinemaSchedule.process(CancelRoomEventCommand("1", defaultDate, LocalTime.of(17, 0)))
 
         // then
         assertThat(scheduleResult).isInstanceOf(ScheduleResult.Success::class).transform { it.events }.containsExactly(
-            CinemaScheduleEvent.RoomEventCancelled(
-                "1", sampleShow(sampleMovieId1, defaultDate, LocalTime.of(17, 0))
+            RoomEventCancelled(
+                3, "1", sampleShow(sampleMovieId1, defaultDate, LocalTime.of(17, 0))
             )
         )
     }
@@ -186,10 +194,10 @@ class CinemaScheduleTest {
         // given
         val cinemaSchedule = givenCinemaScheduleEvents(
             listOf(
-                CinemaScheduleEvent.RoomEventAdded("1", sampleShow(sampleMovieId1, defaultDate, LocalTime.of(17, 0))),
-                CinemaScheduleEvent.RoomEventAdded("1", sampleShow(sampleMovieId2, defaultDate, LocalTime.of(20, 0))),
-                CinemaScheduleEvent.RoomEventCancelled(
-                    "1", sampleShow(sampleMovieId1, defaultDate, LocalTime.of(17, 0))
+                RoomEventAdded(1, "1", sampleShow(sampleMovieId1, defaultDate, LocalTime.of(17, 0))),
+                RoomEventAdded(2, "1", sampleShow(sampleMovieId2, defaultDate, LocalTime.of(20, 0))),
+                RoomEventCancelled(
+                    3, "1", sampleShow(sampleMovieId1, defaultDate, LocalTime.of(17, 0))
                 )
             )
         )
@@ -207,8 +215,8 @@ class CinemaScheduleTest {
         val halfPastFivePm = LocalTime.of(17, 30)
         val cinemaSchedule = givenCinemaScheduleEvents(
             listOf(
-                CinemaScheduleEvent.RoomEventAdded(
-                    "1",
+                RoomEventAdded(
+                    1, "1",
                     sampleShow(
                         movieId = sampleMovieId1,
                         startTime = halfPastFivePm,
@@ -221,7 +229,7 @@ class CinemaScheduleTest {
 
         // when
         val scheduleResult = cinemaSchedule.process(
-            CinemaScheduleCommand.ScheduleRoomEvent(
+            ScheduleRoomEventCommand(
                 "1", sampleShow(movieId = sampleMovieId2, startTime = halfPastFivePm.plusMinutes(90))
             )
         )
@@ -245,8 +253,8 @@ class CinemaScheduleTest {
         val halfPastFivePm = LocalTime.of(17, 30)
         val cinemaSchedule = givenCinemaScheduleEvents(
             listOf(
-                CinemaScheduleEvent.RoomEventAdded(
-                    "1",
+                RoomEventAdded(
+                    1, "1",
                     sampleShow(
                         movieId = sampleMovieId1,
                         startTime = halfPastFivePm,
@@ -259,7 +267,7 @@ class CinemaScheduleTest {
 
         // when
         val scheduleResult = cinemaSchedule.process(
-            CinemaScheduleCommand.ScheduleRoomEvent(
+            ScheduleRoomEventCommand(
                 "1",
                 sampleShow(
                     movieId = sampleMovieId2,
@@ -272,9 +280,10 @@ class CinemaScheduleTest {
         assertThat(scheduleResult).isInstanceOf(ScheduleResult.Success::class)
             .transform { it.events }
             .containsOnly(
-                CinemaScheduleEvent.RoomEventAdded(
+                RoomEventAdded(
+                    2,
                     roomId = "1",
-                    roomEvent = sampleShow(
+                    event = sampleShow(
                         movieId = sampleMovieId2,
                         startTime = halfPastFivePm.plusMinutes(90).plusMinutes(15)
                     )
@@ -288,8 +297,8 @@ class CinemaScheduleTest {
         val halfPastFivePm = LocalTime.of(17, 30)
         val cinemaSchedule = givenCinemaScheduleEvents(
             listOf(
-                CinemaScheduleEvent.RoomEventAdded(
-                    "1",
+                RoomEventAdded(
+                    1, "1",
                     sampleShow(
                         movieId = sampleMovieId1,
                         startTime = halfPastFivePm,
@@ -302,7 +311,7 @@ class CinemaScheduleTest {
 
         // when
         val scheduleResult = cinemaSchedule.process(
-            CinemaScheduleCommand.ScheduleRoomEvent(
+            ScheduleRoomEventCommand(
                 "2",
                 sampleShow(
                     movieId = sampleMovieId2,
@@ -322,19 +331,73 @@ class CinemaScheduleTest {
     }
 
     @Test
-    fun `should distinct show time and show time  plus cleaning time`() {
-        // what's the case for this?
-        TODO()
+    fun `should schedule temporal unavailability`() {
+        // given
+        val schedule = CinemaSchedule.empty()
+
+        // when
+        val scheduleResult = schedule.process(
+            ScheduleRoomEventCommand(
+                roomId = "1",
+                event = RoomEvent.Unavailability(
+                    date = LocalDate.of(2023, 4, 27),
+                    startTime = LocalTime.of(17, 0),
+                    endTime = LocalTime.of(19, 0)
+                )
+            )
+        )
+
+        // then
+        assertThat(scheduleResult).isInstanceOf(ScheduleResult.Success::class)
+            .transform { it.events }
+            .containsOnly(
+                RoomEventAdded(
+                    version = 1,
+                    roomId = "1",
+                    event = RoomEvent.Unavailability(
+                        date = LocalDate.of(2023, 4, 27),
+                        startTime = LocalTime.of(17, 0),
+                        endTime = LocalTime.of(19, 0)
+                    )
+                )
+            )
     }
 
     @Test
-    fun `should schedule room unavailability`() {
-        TODO()
-    }
+    fun `should properly version cinema schedule`() {
+        val schedule = givenCinemaScheduleEvents(
+            listOf(
+                RoomEventAdded(1, "1", sampleShow()),
+                RoomEventAdded(2, "2", sampleShow()),
+                RoomEventAdded(3, "3", sampleShow())
+            )
+        )
+        val scheduleResult =
+            schedule.process(
+                CancelRoomEventCommand(
+                    roomId = "2",
+                    date = sampleShow().date,
+                    startTime = sampleShow().startTime
+                )
+            )
 
-    @Test
-    fun `remember to add event version to state and events classes`() {
-        TODO()
+        assertThat(scheduleResult).isInstanceOf(ScheduleResult.Success::class)
+            .transform {
+                it.events.fold(schedule) { schedule, cinemaScheduleEvent ->
+                    schedule.applyEvent(
+                        cinemaScheduleEvent
+                    )
+                }
+            }
+            .isEqualTo(
+                CinemaSchedule(
+                    version = 4,
+                    roomEventsByRoomId = mapOf(
+                        Pair("1", listOf(sampleShow())),
+                        Pair("3", listOf(sampleShow()))
+                    )
+                )
+            )
     }
 }
 

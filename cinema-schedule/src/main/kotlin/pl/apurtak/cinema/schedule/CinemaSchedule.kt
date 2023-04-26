@@ -4,26 +4,28 @@ import pl.apurtak.cinema.schedule.CinemaScheduleEvent.*
 import java.time.LocalDate
 
 data class CinemaSchedule(
-    private val roomEventsById: Map<String, List<RoomEvent>>
+    private val version: Long,
+    private val roomEventsByRoomId: Map<String, List<RoomEvent>>
 ) {
     fun process(scheduleCommand: CinemaScheduleCommand): ScheduleResult {
         return when (scheduleCommand) {
-            is CinemaScheduleCommand.CancelRoomEvent -> processCancelRoomEventCommand(scheduleCommand)
-            is CinemaScheduleCommand.ScheduleRoomEvent -> processScheduleRoomEventCommand(scheduleCommand)
+            is CinemaScheduleCommand.CancelRoomEventCommand -> processCancelRoomEventCommand(scheduleCommand)
+            is CinemaScheduleCommand.ScheduleRoomEventCommand -> processScheduleRoomEventCommand(scheduleCommand)
         }
     }
 
-    private fun processCancelRoomEventCommand(cancelRoomEventCommand: CinemaScheduleCommand.CancelRoomEvent): ScheduleResult {
-        val roomEventToCancel = roomEventsById[cancelRoomEventCommand.roomId]
+    private fun processCancelRoomEventCommand(cancelRoomEventCommand: CinemaScheduleCommand.CancelRoomEventCommand): ScheduleResult {
+        val roomEventToCancel = roomEventsByRoomId[cancelRoomEventCommand.roomId]
             ?.find { it.date == cancelRoomEventCommand.date && it.startTime == cancelRoomEventCommand.startTime }
         return ScheduleResult.Success(listOfNotNull(roomEventToCancel).map {
             RoomEventCancelled(
+                version + 1,
                 cancelRoomEventCommand.roomId, it
             )
         })
     }
 
-    private fun processScheduleRoomEventCommand(scheduleRoomEvent: CinemaScheduleCommand.ScheduleRoomEvent): ScheduleResult {
+    private fun processScheduleRoomEventCommand(scheduleRoomEvent: CinemaScheduleCommand.ScheduleRoomEventCommand): ScheduleResult {
         val overlappingRoomEvent: RoomEvent? = findFirstOverlappingRoomEvent(scheduleRoomEvent)
 
         val cleaningServiceUnavailable: ScheduleResult.Error.CleaningServiceUnavailable? =
@@ -34,18 +36,19 @@ data class CinemaSchedule(
             else -> ScheduleResult.Success(
                 events = listOf(
                     RoomEventAdded(
-                        roomId = scheduleRoomEvent.roomId, roomEvent = scheduleRoomEvent.event
+                        version + 1,
+                        roomId = scheduleRoomEvent.roomId, event = scheduleRoomEvent.event
                     )
                 )
             )
         }
     }
 
-    private fun cleaningServiceUnavailable(scheduleRoomEvent: CinemaScheduleCommand.ScheduleRoomEvent): ScheduleResult.Error.CleaningServiceUnavailable? {
+    private fun cleaningServiceUnavailable(scheduleRoomEvent: CinemaScheduleCommand.ScheduleRoomEventCommand): ScheduleResult.Error.CleaningServiceUnavailable? {
         val showToBeScheduled = scheduleRoomEvent.event as? RoomEvent.Show
         if (showToBeScheduled == null) return null
         else {
-            val showsWithOverlappingCleaningSlotsByRoomId = roomEventsById.mapValues { entry ->
+            val showsWithOverlappingCleaningSlotsByRoomId = roomEventsByRoomId.mapValues { entry ->
                 entry.value
                     .mapNotNull { it as? RoomEvent.Show }
                     .filter { it.date == scheduleRoomEvent.event.date }
@@ -63,8 +66,8 @@ data class CinemaSchedule(
     }
 
 
-    private fun findFirstOverlappingRoomEvent(scheduleCommand: CinemaScheduleCommand.ScheduleRoomEvent): RoomEvent? {
-        return roomEventsById[scheduleCommand.roomId]
+    private fun findFirstOverlappingRoomEvent(scheduleCommand: CinemaScheduleCommand.ScheduleRoomEventCommand): RoomEvent? {
+        return roomEventsByRoomId[scheduleCommand.roomId]
             ?.find { roomEventsOverlap(scheduleCommand.event, it) }
     }
 
@@ -79,8 +82,10 @@ data class CinemaSchedule(
     fun applyEvent(scheduleEvent: CinemaScheduleEvent): CinemaSchedule {
         return when (scheduleEvent) {
             is RoomEventAdded -> CinemaSchedule(
-                addRoomEvent(roomEventsById, scheduleEvent.roomId, scheduleEvent.roomEvent)
+                scheduleEvent.version,
+                addRoomEvent(roomEventsByRoomId, scheduleEvent.roomId, scheduleEvent.event)
             )
+
             is RoomEventCancelled -> applyRoomEventCancelled(scheduleEvent)
         }
     }
@@ -94,16 +99,18 @@ data class CinemaSchedule(
     }
 
     private fun applyRoomEventCancelled(roomEventCancelled: RoomEventCancelled): CinemaSchedule {
-        val allRoomEvents = roomEventsById[roomEventCancelled.roomId]
+        val allRoomEvents = roomEventsByRoomId[roomEventCancelled.roomId]
         val roomEventsWithoutCancelledEvent =
             allRoomEvents?.filterNot { it == roomEventCancelled.roomEvent } ?: emptyList()
         return CinemaSchedule(
-            roomEventsById.plus(Pair(roomEventCancelled.roomId, roomEventsWithoutCancelledEvent))
+            version + 1,
+            roomEventsByRoomId.plus(Pair(roomEventCancelled.roomId, roomEventsWithoutCancelledEvent))
+                .filterValues { it.isNotEmpty() }
         )
     }
 
     fun getRoomSchedule(roomId: String): List<RoomEvent> {
-        return roomEventsById[roomId]?.sortedBy { it.date.atTime(it.startTime) } ?: emptyList()
+        return roomEventsByRoomId[roomId]?.sortedBy { it.date.atTime(it.startTime) } ?: emptyList()
     }
 
     fun getRoomSchedule(roomId: String, date: LocalDate): List<RoomEvent> {
@@ -112,7 +119,7 @@ data class CinemaSchedule(
 
     companion object {
         fun empty(): CinemaSchedule {
-            return CinemaSchedule(emptyMap())
+            return CinemaSchedule(0, emptyMap())
         }
     }
 }

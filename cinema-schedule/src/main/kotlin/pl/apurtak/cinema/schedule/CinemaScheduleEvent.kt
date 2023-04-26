@@ -1,11 +1,16 @@
 package pl.apurtak.cinema.schedule
 
 sealed interface CinemaScheduleEvent {
+    val version: Long
     data class RoomEventAdded(
-        val roomId: String, val roomEvent: RoomEvent
+        override val version: Long,
+        val roomId: String,
+        val event: RoomEvent
     ) : CinemaScheduleEvent
 
     data class RoomEventCancelled(
-        val roomId: String, val roomEvent: RoomEvent
+        override val version: Long,
+        val roomId: String,
+        val roomEvent: RoomEvent
     ) : CinemaScheduleEvent
 }
