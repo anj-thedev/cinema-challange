@@ -1,4 +1,4 @@
-package pl.apurtak.cinema.schedule
+package pl.apurtak.cinema.schedule.model
 
 import assertk.all
 import assertk.assertThat
@@ -7,12 +7,12 @@ import assertk.assertions.containsOnly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
 import org.junit.jupiter.api.Test
-import pl.apurtak.cinema.schedule.CinemaScheduleCommand.*
-import pl.apurtak.cinema.schedule.CinemaScheduleEvent.*
-import pl.apurtak.cinema.schedule.CinemaScheduleFixtures.defaultDate
-import pl.apurtak.cinema.schedule.CinemaScheduleFixtures.sampleMovieId1
-import pl.apurtak.cinema.schedule.CinemaScheduleFixtures.sampleMovieId2
-import pl.apurtak.cinema.schedule.CinemaScheduleFixtures.sampleShow
+import pl.apurtak.cinema.schedule.model.CinemaScheduleCommand.*
+import pl.apurtak.cinema.schedule.model.CinemaScheduleEvent.*
+import pl.apurtak.cinema.schedule.model.CinemaScheduleFixtures.defaultDate
+import pl.apurtak.cinema.schedule.model.CinemaScheduleFixtures.sampleMovieId1
+import pl.apurtak.cinema.schedule.model.CinemaScheduleFixtures.sampleMovieId2
+import pl.apurtak.cinema.schedule.model.CinemaScheduleFixtures.sampleShow
 import java.time.LocalDate
 import java.time.LocalTime
 

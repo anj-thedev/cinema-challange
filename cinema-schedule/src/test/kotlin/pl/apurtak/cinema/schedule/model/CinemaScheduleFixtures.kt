@@ -1,4 +1,4 @@
-package pl.apurtak.cinema.schedule
+package pl.apurtak.cinema.schedule.model
 
 import java.time.LocalDate
 import java.time.LocalTime
@@ -10,8 +10,6 @@ object CinemaScheduleFixtures {
     internal val defaultStartTime: LocalTime = LocalTime.of(12, 0)
     internal val sampleMovieId1 = UUID.randomUUID()
     internal val sampleMovieId2 = UUID.randomUUID()
-    internal val sampleMovieId3 = UUID.randomUUID()
-    internal val sampleMovieId4 = UUID.randomUUID()
     internal fun sampleShow(
         movieId: UUID = sampleMovieId1,
         date: LocalDate = defaultDate,

@@ -1,4 +1,4 @@
-package pl.apurtak.cinema.schedule
+package pl.apurtak.cinema.schedule.model
 
 sealed interface CinemaScheduleEvent {
     val version: Long

@@ -1,4 +1,4 @@
-package pl.apurtak.cinema.schedule
+package pl.apurtak.cinema.schedule.model
 
 import java.time.LocalDate
 import java.time.LocalTime

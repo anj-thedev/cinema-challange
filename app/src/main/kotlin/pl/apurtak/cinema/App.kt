@@ -3,12 +3,32 @@
  */
 package pl.apurtak.cinema
 
+import pl.apurtak.cinema.jdbc.JdbcCinemaScheduleEventsStore
 import pl.apurtak.cinema.moviescatalog.MoviesCatalogConfiguration
 import pl.apurtak.cinema.moviescatalog.model.Movie
+import pl.apurtak.cinema.schedule.service.CinemaScheduleAppService
+import pl.apurtak.cinema.schedule.service.ScheduleCommandValidator
+import pl.apurtak.cinema.validators.PremierStartTimeValidator
+import pl.apurtak.cinema.validators.ShowStartTimeValidator
+import java.time.LocalTime
 import java.util.*
 
 class App {
+    private val appConfig = AppConfig(
+        cleaningSlotDurationMinutes = 15,
+        allowedShowStartTimeRange = LocalTime.of(8,0)..LocalTime.of(22, 0),
+        allowedPremierStartTimeRange = LocalTime.of(17, 0)..LocalTime.of(21,0))
     val moviesCatalog = MoviesCatalogConfiguration.inMemoryCatalog()
+    private val scheduleCommandValidators = listOf(
+        ShowStartTimeValidator(appConfig),
+        PremierStartTimeValidator(appConfig)
+    )
+    val cinemaScheduleAppService = CinemaScheduleAppService(
+        JdbcCinemaScheduleEventsStore(),
+        moviesCatalog,
+        scheduleCommandValidators,
+        appConfig
+    )
 }
 
 fun main() {

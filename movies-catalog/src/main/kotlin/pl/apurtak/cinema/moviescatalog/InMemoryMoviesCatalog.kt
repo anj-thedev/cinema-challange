@@ -2,7 +2,7 @@ package pl.apurtak.cinema.moviescatalog
 
 import pl.apurtak.cinema.moviescatalog.model.Movie
 
-internal class InMemoryMoviesCatalog : MoviesCatalog {
+class InMemoryMoviesCatalog : MoviesCatalog {
     private var movies: List<Movie> = emptyList()
 
     override fun add(movie: Movie) {
@@ -15,6 +15,10 @@ internal class InMemoryMoviesCatalog : MoviesCatalog {
 
     override fun findById(id: Movie): Movie? {
         TODO("Not yet implemented")
+    }
+
+    override fun findByName(movieName: String): Movie? {
+        return movies.find { it.name == movieName }
     }
 
 }

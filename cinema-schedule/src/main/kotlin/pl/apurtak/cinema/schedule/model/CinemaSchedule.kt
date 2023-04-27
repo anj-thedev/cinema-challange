@@ -1,6 +1,6 @@
-package pl.apurtak.cinema.schedule
+package pl.apurtak.cinema.schedule.model
 
-import pl.apurtak.cinema.schedule.CinemaScheduleEvent.*
+import pl.apurtak.cinema.schedule.model.CinemaScheduleEvent.*
 import java.time.LocalDate
 
 data class CinemaSchedule(

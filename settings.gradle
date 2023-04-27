@@ -16,3 +16,4 @@ rootProject.name = 'cinema-challange'
 include('app')
 include('movies-catalog')
 include('cinema-schedule')
+include('cinema-schedule-app-service')

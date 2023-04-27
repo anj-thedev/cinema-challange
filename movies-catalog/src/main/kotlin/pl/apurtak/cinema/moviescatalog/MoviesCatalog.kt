@@ -6,4 +6,5 @@ interface MoviesCatalog {
     fun add(movie: Movie)
     fun listMovies(): List<Movie>
     fun findById(id: Movie): Movie?
+    fun findByName(movieName: String): Movie?
 }
