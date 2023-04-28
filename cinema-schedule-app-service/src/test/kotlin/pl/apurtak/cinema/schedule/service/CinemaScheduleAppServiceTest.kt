@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalStdlibApi::class)
-
 package pl.apurtak.cinema.schedule.service
 
 import assertk.assertThat
@@ -15,6 +13,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.util.*
 
+@OptIn(ExperimentalStdlibApi::class)
 class CinemaScheduleAppServiceTest {
 
     private lateinit var cinemaScheduleEventsStore: CinemaScheduleEventsStore
