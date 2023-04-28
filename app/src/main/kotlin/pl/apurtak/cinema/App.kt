@@ -7,9 +7,12 @@ import pl.apurtak.cinema.jdbc.JdbcCinemaScheduleEventsStore
 import pl.apurtak.cinema.moviescatalog.MoviesCatalogConfiguration
 import pl.apurtak.cinema.moviescatalog.model.Movie
 import pl.apurtak.cinema.schedule.service.CinemaScheduleAppService
+import pl.apurtak.cinema.schedule.service.EnrichedRoomEvent
 import pl.apurtak.cinema.schedule.service.ScheduleCommandValidator
+import pl.apurtak.cinema.schedule.service.ScheduleShowCommand
 import pl.apurtak.cinema.validators.PremierStartTimeValidator
 import pl.apurtak.cinema.validators.ShowStartTimeValidator
+import java.time.LocalDate
 import java.time.LocalTime
 import java.util.*
 
@@ -50,4 +53,42 @@ fun main() {
 
     println("Available movies: ${app.moviesCatalog.listMovies()}")
 
+    app.cinemaScheduleAppService.scheduleShow(
+        ScheduleShowCommand(
+            roomId = "1",
+            movieName = "Shrek",
+            date = LocalDate.of(2023, 4, 27),
+            startTime = LocalTime.of(17, 0),
+            isPremier = true
+        )
+    )
+    app.cinemaScheduleAppService.scheduleShow(
+        ScheduleShowCommand(
+            roomId = "1",
+            movieName = "Shrek",
+            date = LocalDate.of(2023, 4, 27),
+            startTime = LocalTime.of(19, 0),
+            isPremier = false
+        )
+    )
+
+    app.cinemaScheduleAppService.scheduleShow(
+        ScheduleShowCommand(
+            roomId = "2",
+            movieName = "The Godfather",
+            date = LocalDate.of(2023, 4, 27),
+            startTime = LocalTime.of(18, 0),
+            isPremier = false
+        )
+    )
+
+    val room1Schedule = app.cinemaScheduleAppService.getRoomSchedule("1", LocalDate.of(2023, 4, 27))
+    println("Room 1 schedule:\n${room1Schedule.prettyPrint()} \n")
+
+    val room2Schedule = app.cinemaScheduleAppService.getRoomSchedule("2", LocalDate.of(2023, 4, 27))
+    println("Room 2 schedule:\n${room2Schedule.prettyPrint()} \n")
+
 }
+
+private fun List<EnrichedRoomEvent>.prettyPrint() =
+    this.joinToString("\n")

@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalStdlibApi::class)
+
 package pl.apurtak.cinema.schedule.service
 
 import assertk.assertThat
@@ -87,8 +89,18 @@ class CinemaScheduleAppServiceTest {
         val roomSchedule = cinemaScheduleAppService.getRoomSchedule("1", SAMPLE_DATE)
         // then
         assertThat(roomSchedule).containsOnly(
-            EnrichedRoomEvent.Show(SAMPLE_MOVIE, SAMPLE_DATE, SAMPLE_START_TIME),
-            EnrichedRoomEvent.Show(SAMPLE_MOVIE_2, SAMPLE_DATE, SAMPLE_START_TIME_2)
+            EnrichedRoomEvent.Show(
+                movie = SAMPLE_MOVIE,
+                date = SAMPLE_DATE,
+                startTime = SAMPLE_START_TIME,
+                cleaningSlotTimeRange = SAMPLE_SHOW_CLEANING_SLOT
+            ),
+            EnrichedRoomEvent.Show(
+                movie = SAMPLE_MOVIE_2,
+                date = SAMPLE_DATE,
+                startTime = SAMPLE_START_TIME_2,
+                cleaningSlotTimeRange = SAMPLE_SHOW_2_CLEANING_SLOT
+            )
         )
     }
 
@@ -102,6 +114,7 @@ class CinemaScheduleAppServiceTest {
             durationMinutes = 110,
             cleaningSlotDurationMinutes = 15
         )
+        private val SAMPLE_SHOW_CLEANING_SLOT = SAMPLE_SHOW.cleaningSlotStartTime..<SAMPLE_SHOW.cleaningSlotEndTime
         private val SAMPLE_START_TIME_2 = SAMPLE_START_TIME.plusHours(3)
         private val SAMPLE_SHOW_2 = SAMPLE_SHOW.copy(
             movieId = UUID.randomUUID(),
@@ -109,6 +122,8 @@ class CinemaScheduleAppServiceTest {
             durationMinutes = 90,
             cleaningSlotDurationMinutes = 15
         )
+        private val SAMPLE_SHOW_2_CLEANING_SLOT =
+            SAMPLE_SHOW_2.cleaningSlotStartTime..<SAMPLE_SHOW_2.cleaningSlotEndTime
         private val SAMPLE_MOVIE = Movie(
             id = SAMPLE_SHOW.movieId,
             name = "Shrek",

@@ -6,10 +6,12 @@ import java.time.LocalTime
 
 sealed interface EnrichedRoomEvent {
 
+    @OptIn(ExperimentalStdlibApi::class)
     data class Show(
         val movie: Movie,
         val date: LocalDate,
         val startTime: LocalTime,
+        val cleaningSlotTimeRange: OpenEndRange<LocalTime>
     ) : EnrichedRoomEvent
 
     data class Unavailability(

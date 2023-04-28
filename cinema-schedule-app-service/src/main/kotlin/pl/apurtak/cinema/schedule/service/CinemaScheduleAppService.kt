@@ -9,6 +9,7 @@ import pl.apurtak.cinema.schedule.model.ScheduleResult
 import java.time.LocalDate
 import java.util.UUID
 
+@OptIn(ExperimentalStdlibApi::class)
 class CinemaScheduleAppService(
     private val cinemaScheduleEventsStore: CinemaScheduleEventsStore,
     private val moviesCatalog: MoviesCatalog,
@@ -73,7 +74,10 @@ class CinemaScheduleAppService(
             is RoomEvent.Show -> {
                 val movie = movieByName[roomEvent.movieId] ?: throw IllegalStateException("Movie with Id ${roomEvent.movieId} not found in catalog")
                 EnrichedRoomEvent.Show(
-                    movie, roomEvent.date, roomEvent.startTime
+                    movie,
+                    roomEvent.date,
+                    roomEvent.startTime,
+                    roomEvent.cleaningSlotStartTime..<roomEvent.cleaningSlotEndTime
                 )
             }
             is RoomEvent.Unavailability -> EnrichedRoomEvent.Unavailability(roomEvent.date, roomEvent.startTime, roomEvent.endTime)
